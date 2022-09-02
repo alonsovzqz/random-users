@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import UserSearch from "./components/UserSearch/UserSearch";
+import UserResultsNumber from "./components/UserResultsNumber/UserResultsNumber";
 import UserList from "./components/UsersList/UsersList";
+
 
 const filterRandomUsers = (userList, search) => {
   return (
@@ -15,44 +18,48 @@ const filterRandomUsers = (userList, search) => {
 
 function App() {
   const [userValue, setUserValue] = useState("");
+  const [userNumber, setUserNumber] = useState(10);
   const [randomUsers, setRandomUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const displayedUsers = filteredUsers.length > 0 ? filteredUsers : randomUsers;
 
-  const userInputValueHandler = (event) => {
-    setUserValue(event.target.value);
-  };
-
   const fetchRandomUsers = () => {
-    fetch("https://randomuser.me/api/?nat=US&results=200")
+    setIsLoading(true);
+    fetch(`https://randomuser.me/api/?nat=US&results=${userNumber}&seed=foobar`)
       .then((res) => res.json())
-      .then((res) => setRandomUsers(res.results))
+      .then((res) => {
+        setRandomUsers(res.results);
+        setIsLoading(false);
+      })
       .catch((err) => console.error(err));
   };
 
   useEffect(() => {
-    setIsLoading(true);
     fetchRandomUsers();
-    setIsLoading(false);
-  }, []);
+  }, [userNumber]);
 
-  useEffect(() => {
+  const onSubmitHandler = () => {
     const filterUsersConst = filterRandomUsers(randomUsers, userValue);
-    console.log(filterUsersConst);
-    setFilteredUsers(filterRandomUsers(randomUsers, userValue));
-  }, [userValue]);
+    setFilteredUsers(filterUsersConst);
+  };
+
+  const updateUserNumberHandler = (userNumberValue) => {
+    setUserNumber(userNumberValue);
+  };
 
   return (
     <div className="App">
       <header className="App-header">
         <h1>Random users</h1>
-        <input
-          type="text"
-          name="user"
-          id="user-input"
-          value={userValue}
-          onChange={userInputValueHandler}
+        <UserResultsNumber
+          userResult={userNumber}
+          updateUserNumber={updateUserNumberHandler}
+        />
+        <UserSearch
+          userVal={userValue}
+          setUserVal={setUserValue}
+          onSubmit={onSubmitHandler}
         />
       </header>
       <main>
